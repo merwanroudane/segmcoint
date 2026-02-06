@@ -1,0 +1,144 @@
+Metadata-Version: 2.4
+Name: segmcoint
+Version: 1.0.0
+Summary: Tests for Segmented Cointegration: Kim (2003) and Martins & Rodrigues (2022)
+Author-email: Dr Merwan Roudane <merwanroudane920@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/merwanroudane/segmcoint
+Project-URL: Repository, https://github.com/merwanroudane/segmcoint
+Project-URL: Issues, https://github.com/merwanroudane/segmcoint/issues
+Keywords: cointegration,segmented cointegration,unit root,structural breaks,time series,econometrics
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.21
+Requires-Dist: scipy>=1.7
+Requires-Dist: pandas>=1.3
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: matplotlib>=3.5; extra == "dev"
+Dynamic: license-file
+
+# segmcoint
+
+**Tests for Segmented Cointegration**
+
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A Python library implementing rigorous tests for segmented cointegration from two seminal econometric papers:
+
+1. **Kim, J.-Y. (2003)**. *Inference on Segmented Cointegration*. Econometric Theory, 19, 620–639.
+2. **Martins, L.F. and Rodrigues, P.M.M. (2022)**. *Tests for Segmented Cointegration: An Application to US Governments Budgets*. Empirical Economics, 63, 567–600.
+
+## Overview
+
+Cointegration relations are often interpreted as long-run equilibrium relationships. In practice, however, real data frequently fail to confirm cointegration for well-understood economic relations. This package addresses the possibility that failure to confirm cointegration is due to **nonstationary deviations in a relatively small portion of the data** ("short-run"), while the cointegration relation prevails in the remaining periods—a situation called **segmented cointegration**.
+
+### Kim (2003) Tests
+
+- Phillips–Perron–Ouliaris type tests: $Z^*_\rho(\mathcal{C})$ and $Z^*_t(\mathcal{C})$
+- Augmented Dickey–Fuller type tests: $ADF^*_\rho(\mathcal{C})$ and $ADF^*_t(\mathcal{C})$
+- Extremum estimator for break date identification (Eq. 3.16–3.17)
+- Critical values from Tables 1 and 2 of the paper (for $\bar{\ell}(\mathcal{T}_N) = 0.3$)
+
+### Martins & Rodrigues (2022) Tests
+
+- Wald-type statistics: $F_A(\tau, m^*)$ and $F_B(\tau, m^*)$ (Eq. 3.2)
+- Supremum statistics: $\sup F_A(m^*)$ and $\sup F_B(m^*)$ (Eq. 3.3)
+- Combined test: $W(m^*)$ (Eq. 3.4)
+- Double maximum test: $W_{\max}$ (Eq. 3.5)
+- Critical values from Table 1 of the paper
+- Break date estimation (Remark 3)
+
+## Installation
+
+```bash
+pip install .
+```
+
+Or for development:
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Quick Start
+
+```python
+import numpy as np
+from segmcoint import kim_test, mr_test, generate_segmented_data
+
+# Generate data with segmented cointegration
+y, X, eps, info = generate_segmented_data(T=200, rho=0.85, seed=42)
+
+# Kim (2003) tests
+res_kim = kim_test(y, X, model='drift')
+print(res_kim)
+
+# Martins & Rodrigues (2022) tests
+res_mr = mr_test(y, X, model='drift')
+print(res_mr)
+```
+
+## Model Specifications
+
+Three deterministic specifications are supported, following Kim (2003, Eq. 2.1a–2.1c):
+
+| Model    | Equation                                                | Kim (2003) | M&R (2022) |
+|----------|---------------------------------------------------------|------------|------------|
+| `'none'` | $x_{1t} = \beta' x_{2t} + \varepsilon_t$              | Case I     | No det.    |
+| `'drift'`| $x_{1t} = \alpha + \beta' x_{2t} + \varepsilon_t$     | Case II    | Intercept  |
+| `'trend'`| $x_{1t} = \alpha + \gamma t + \beta' x_{2t} + \varepsilon_t$ | Case III | Int.+Trend |
+
+## API Reference
+
+### `kim_test(y, X, model, max_ell, step, ...)`
+
+Computes the infimum test statistics from Kim (2003). Returns a `KimTestResult` object.
+
+### `mr_test(y, X, model, max_breaks, epsilon, step, ...)`
+
+Computes the Wald-type test statistics from Martins & Rodrigues (2022). Returns an `MRTestResult` object.
+
+### `kim_break_estimator(y, X, model, max_ell, step)`
+
+Extremum estimator for the noncointegration period (Kim 2003, Eq. 3.16–3.17).
+
+### `generate_segmented_data(T, beta, rho, ...)`
+
+Generate simulated data from a segmented cointegration DGP.
+
+## Testing
+
+```bash
+pytest tests/ -v
+```
+
+## Author
+
+**Dr Merwan Roudane**  
+Email: merwanroudane920@gmail.com  
+GitHub: [https://github.com/merwanroudane/segmcoint](https://github.com/merwanroudane/segmcoint)
+
+## License
+
+MIT License
+
+## References
+
+- Kim, J.-Y. (2003). Inference on Segmented Cointegration. *Econometric Theory*, 19, 620–639.
+- Martins, L.F. and Rodrigues, P.M.M. (2022). Tests for Segmented Cointegration: An Application to US Governments Budgets. *Empirical Economics*, 63, 567–600.
+- Phillips, P.C.B. and Ouliaris, S. (1990). Asymptotic Properties of Residual Based Tests for Cointegration. *Econometrica*, 58, 165–193.
+- Kejriwal, M., Perron, P., and Zhou, J. (2013). Wald Tests for Detecting Multiple Structural Changes in Persistence. *Econometric Theory*, 29, 289–323.

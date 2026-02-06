@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+segmcoint/__init__.py
+segmcoint/kim2003.py
+segmcoint/martins_rodrigues2022.py
+segmcoint/simulation.py
+segmcoint/utils.py
+segmcoint.egg-info/PKG-INFO
+segmcoint.egg-info/SOURCES.txt
+segmcoint.egg-info/dependency_links.txt
+segmcoint.egg-info/requires.txt
+segmcoint.egg-info/top_level.txt
+tests/test_segmcoint.py
