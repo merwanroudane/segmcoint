@@ -33,7 +33,7 @@ Cointegration relations are often interpreted as long-run equilibrium relationsh
 ## Installation
 
 ```bash
-pip install .
+pip install segmcoint==1.0.0
 ```
 
 Or for development:
