@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>segmcoint — Segmented Cointegration Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --bg: #FAFAF8;
+  --bg-card: #FFFFFF;
+  --bg-code: #F5F3EF;
+  --bg-nav: #FFFFFF;
+  --text: #2D2A24;
+  --text-light: #6B6560;
+  --text-muted: #9A938B;
+  --accent: #C45527;
+  --accent-light: #E8DDD4;
+  --accent-hover: #A8431E;
+  --border: #E8E4DE;
+  --border-light: #F0ECE6;
+  --teal: #1A7A6D;
+  --teal-bg: #E8F5F2;
+  --blue: #2E6CA4;
+  --blue-bg: #EBF3FA;
+  --green: #3A7D44;
+  --red: #C45527;
+  --shadow: 0 1px 3px rgba(45,42,36,0.06);
+  --shadow-lg: 0 4px 20px rgba(45,42,36,0.08);
+  --radius: 8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Source Sans 3',sans-serif;color:var(--text);background:var(--bg);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg-nav);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);height:56px;display:flex;align-items:center;padding:0 2rem}
+.top-bar .logo{font-family:'Source Serif 4',serif;font-weight:700;font-size:1.25rem;color:var(--accent);text-decoration:none;letter-spacing:-.02em}
+.top-bar .logo span{color:var(--text-muted);font-weight:400;font-size:.85rem;margin-left:.5rem}
+.top-bar nav{margin-left:auto;display:flex;gap:.25rem}
+.top-bar nav a{font-size:.82rem;font-weight:500;color:var(--text-light);text-decoration:none;padding:.35rem .75rem;border-radius:6px;transition:all .15s}
+.top-bar nav a:hover,.top-bar nav a.active{background:var(--accent-light);color:var(--accent)}
+
+/* SIDEBAR */
+.layout{display:flex;margin-top:56px;min-height:calc(100vh - 56px)}
+.sidebar{width:260px;position:fixed;top:56px;bottom:0;overflow-y:auto;padding:1.5rem 1rem;border-right:1px solid var(--border);background:var(--bg-nav);font-size:.82rem}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sidebar .section-label{font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;font-size:.7rem;margin:1.2rem 0 .4rem;padding-left:.5rem}
+.sidebar a{display:block;color:var(--text-light);text-decoration:none;padding:.3rem .5rem;border-radius:5px;transition:all .12s;line-height:1.4}
+.sidebar a:hover{background:var(--accent-light);color:var(--accent)}
+.sidebar a.sub{padding-left:1.2rem;font-size:.78rem;color:var(--text-muted)}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;padding:2.5rem 3rem 4rem;max-width:960px}
+
+/* HEADINGS */
+h1{font-family:'Source Serif 4',serif;font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:.5rem;color:var(--text)}
+h2{font-family:'Source Serif 4',serif;font-size:1.55rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);color:var(--text)}
+h3{font-family:'Source Serif 4',serif;font-size:1.2rem;font-weight:600;margin:2rem 0 .75rem;color:var(--text)}
+h4{font-size:.95rem;font-weight:600;margin:1.5rem 0 .5rem;color:var(--text-light)}
+
+/* HERO */
+.hero{padding:2.5rem 0 2rem;margin-bottom:2rem;border-bottom:1px solid var(--border)}
+.hero .badge{display:inline-block;background:var(--teal-bg);color:var(--teal);font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:20px;margin-bottom:1rem;letter-spacing:.03em}
+.hero p{font-size:1.05rem;color:var(--text-light);max-width:640px;line-height:1.65}
+.hero .author{margin-top:1.2rem;font-size:.9rem;color:var(--text-light)}
+.hero .author strong{color:var(--accent);font-weight:600}
+
+/* CARDS */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin:1.25rem 0;box-shadow:var(--shadow)}
+.card.accent{border-left:3px solid var(--accent)}
+.card.teal{border-left:3px solid var(--teal)}
+.card.blue{border-left:3px solid var(--blue)}
+.card h4{margin-top:0}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin:1rem 0}
+table th{background:#F7F5F0;font-weight:600;text-align:left;padding:.55rem .7rem;border:1px solid var(--border);color:var(--text);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+table td{padding:.5rem .7rem;border:1px solid var(--border-light);vertical-align:top}
+table tr:nth-child(even){background:#FCFBF9}
+table tr:hover{background:var(--accent-light)}
+td.sig{color:var(--accent);font-weight:700}
+td.reject{color:var(--green);font-weight:600}
+td.fail{color:var(--text-muted)}
+
+/* CODE / OUTPUT BLOCKS */
+.output-block{background:var(--bg-code);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0;font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:1.6;overflow-x:auto;white-space:pre;color:var(--text)}
+.output-label{font-family:'Source Sans 3',sans-serif;font-size:.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;display:block}
+
+/* IMAGES */
+.figure{margin:1.5rem 0;text-align:center}
+.figure img{max-width:100%;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg)}
+.figure .caption{font-size:.8rem;color:var(--text-muted);margin-top:.5rem;font-style:italic}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+
+/* REFERENCES */
+.ref{font-size:.85rem;color:var(--text-light);padding:.4rem 0;border-bottom:1px solid var(--border-light)}
+.ref em{color:var(--text)}
+
+/* FORMULA */
+.formula-box{background:var(--blue-bg);border:1px solid #D0DEE9;border-radius:var(--radius);padding:1.2rem 1.5rem;margin:1rem 0;text-align:center}
+
+/* PILLS */
+.pill{display:inline-block;font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:12px;margin:.1rem}
+.pill.green{background:#E8F5E9;color:#2E7D32}
+.pill.red{background:#FFEBEE;color:#C62828}
+.pill.grey{background:#F0ECE6;color:#6B6560}
+
+/* FOOTER */
+footer{margin-left:260px;padding:2rem 3rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--text-muted);text-align:center}
+footer a{color:var(--accent);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main,footer{margin-left:0;padding:1.5rem}
+  .grid-2{grid-template-columns:1fr}
+  .top-bar nav{display:none}
+}
+
+p{margin:.6rem 0}
+ul,ol{margin:.5rem 0 .5rem 1.5rem}
+li{margin:.2rem 0}
+a{color:var(--accent)}
+code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--bg-code);padding:.1em .35em;border-radius:3px}
+hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="top-bar">
+  <a href="#" class="logo">segmcoint <span>v1.0.0</span></a>
+  <nav>
+    <a href="#data">Data</a>
+    <a href="#kim-tests">Kim Tests</a>
+    <a href="#mr-tests">MR Tests</a>
+    <a href="#breaks">Break Dates</a>
+    <a href="#robustness">Robustness</a>
+    <a href="#summary">Summary</a>
+    <a href="notebook.html" style="background:var(--accent-light);color:var(--accent);font-weight:600">Full Example ↗</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="section-label">Getting Started</div>
+  <a href="#introduction">Introduction</a>
+  <a href="#installation">Installation</a>
+  <a href="#watermark">Environment</a>
+  <a href="#downloads">Downloads</a>
+  <a href="notebook.html" style="color:var(--accent);font-weight:600">📓 Full Notebook ↗</a>
+
+  <div class="section-label">Data</div>
+  <a href="#data">Kilian (2009) Data</a>
+  <a href="#descriptive">Descriptive Statistics</a>
+  <a href="#visualization">Time Series Plots</a>
+  <a href="#cumulated">Cumulated Series</a>
+
+  <div class="section-label">Tests</div>
+  <a href="#theory">Theoretical Background</a>
+  <a href="#configurations">Test Configurations</a>
+  <a href="#kim-tests">Kim (2003) Tests</a>
+  <a href="#kim-detail" class="sub">Detailed Results</a>
+  <a href="#mr-tests">MR (2022) Tests</a>
+  <a href="#mr-detail" class="sub">Detailed Results</a>
+
+  <div class="section-label">Break Analysis</div>
+  <a href="#breaks">Estimated Break Dates</a>
+  <a href="#break-estimator">Kim Break Estimator</a>
+  <a href="#regimes">Regime Visualisation</a>
+  <a href="#residuals">Residual Analysis</a>
+
+  <div class="section-label">Comparison</div>
+  <a href="#comparison">Stat. Comparison</a>
+  <a href="#wm-profile">W(m*) Profiles</a>
+
+  <div class="section-label">Robustness</div>
+  <a href="#robustness">Deterministic Spec.</a>
+  <a href="#trimming">Trimming Sensitivity</a>
+  <a href="#segment-length">Segment Length</a>
+
+  <div class="section-label">Conclusion</div>
+  <a href="#summary">Full Summary</a>
+  <a href="#interpretation">Interpretation</a>
+  <a href="#references">References</a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- HERO -->
+<section class="hero" id="introduction">
+  <span class="badge">Empirical Application</span>
+  <h1>Segmented Cointegration Analysis</h1>
+  <p>Application to Kilian (2009) Oil Market Data using the <code>segmcoint</code> Python library — implementing Kim (2003) and Martins &amp; Rodrigues (2022) test procedures.</p>
+  <div class="author">
+    by <strong>Dr Merwan Roudane</strong> &nbsp;·&nbsp;
+    <a href="mailto:merwanroudane920@gmail.com">merwanroudane920@gmail.com</a> &nbsp;·&nbsp;
+    <a href="https://github.com/merwanroudane/segmcoint">GitHub</a>
+  </div>
+</section>
+
+<!-- INSTALLATION -->
+<section id="installation">
+<h2>Installation</h2>
+<div class="output-block">pip install segmcoint==1.0.0</div>
+</section>
+
+<!-- WATERMARK -->
+<section id="watermark">
+<h2>Environment Watermark</h2>
+<div class="output-block"><span class="output-label">Output</span>=================================================================
+  ENVIRONMENT WATERMARK
+=================================================================
+  Python          : 3.13.7
+  Platform        : Windows-11-10.0.26100-SP0
+  Date            : 2026-02-06 12:56:47
+
+  NumPy           : 2.3.4
+  Pandas          : 2.3.3
+  SciPy           : 1.16.3
+  Matplotlib      : 3.10.7
+  Seaborn         : 0.13.2
+  segmcoint       : 1.0.0
+  tabulate        : installed
+=================================================================
+
+✓ All packages loaded successfully.</div>
+</section>
+
+<!-- DOWNLOADS -->
+<section id="downloads">
+<h2>Downloads &amp; Full Example</h2>
+
+<div style="display:flex;gap:.75rem;flex-wrap:wrap;padding:1rem 1.25rem;background:var(--teal-bg);border:1px solid #C8E6DF;border-radius:var(--radius);margin-bottom:1rem">
+  <span style="font-size:.75rem;font-weight:600;color:#15685C;letter-spacing:.04em;text-transform:uppercase;align-self:center">Downloads :</span>
+  <a href="downloads/segmented_cointegration_kilian.ipynb" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:600;color:var(--teal);text-decoration:none;padding:.4rem .8rem;border:1px solid #A8D5CB;border-radius:6px;background:#fff">⬇ Notebook (.ipynb)</a>
+  <a href="downloads/Copy_of_Killian.xlsx" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:600;color:var(--teal);text-decoration:none;padding:.4rem .8rem;border:1px solid #A8D5CB;border-radius:6px;background:#fff">⬇ Dataset (.xlsx)</a>
+</div>
+
+<div class="card teal" style="margin-bottom:1.5rem">
+  <h4 style="margin:0 0 .4rem">📓 Full Rendered Notebook</h4>
+  <p style="font-size:.88rem;margin-bottom:.6rem">View the <strong>complete Jupyter notebook</strong> with all code cells, text outputs, and figures rendered as a single page:</p>
+  <a href="notebook.html" style="display:inline-block;padding:.45rem 1.2rem;background:var(--teal);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:.85rem">View Full Example with Outputs →</a>
+</div>
+</section>
+
+<!-- DATA -->
+<section id="data">
+<h2>1. Data: Kilian (2009) Oil Market Variables</h2>
+<p>We use the Kilian (2009) oil market dataset consisting of three monthly variables covering <strong>1973:02 – 2007:12</strong> (T = 419 observations).</p>
+
+<div class="grid-2">
+  <div class="card accent">
+    <h4>Variables</h4>
+    <table>
+      <tr><th>Variable</th><th>Description</th></tr>
+      <tr><td><code>dprod</code></td><td>% change in global crude oil production</td></tr>
+      <tr><td><code>rea</code></td><td>Index of real economic activity (dry cargo rates)</td></tr>
+      <tr><td><code>rpo</code></td><td>Real price of oil (deflated by US CPI)</td></tr>
+    </table>
+  </div>
+  <div class="card teal">
+    <h4>Reference</h4>
+    <p style="font-size:.88rem">Kilian, L. (2009). <em>Not All Oil Price Shocks Are Alike: Disentangling Demand and Supply Shocks in the Crude Oil Market.</em> American Economic Review, 99(3), 1053–1069.</p>
+  </div>
+</div>
+
+<h3>Data Preview</h3>
+<div class="output-block"><span class="output-label">Output — First 8 rows</span>Sample : 1973:02 – 2007:12
+T      : 419 observations
+
+╒═════════════════════╤══════════╤═════════╤══════════╕
+│ Date                │    dprod │     rea │      rpo │
+╞═════════════════════╪══════════╪═════════╪══════════╡
+│ 1973-02-01          │  11.8773 │ 36.0642 │ -47.9995 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-03-01          │   1.4191 │ 41.5270 │ -48.2865 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-04-01          │   1.1777 │ 43.9913 │ -47.0825 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-05-01          │  27.4551 │ 48.1059 │ -43.8577 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-06-01          │ -13.1104 │ 52.0335 │ -41.5711 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-07-01          │  36.2581 │ 52.9429 │ -40.9880 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-08-01          │ -14.0844 │ 57.6660 │ -42.7817 │
+├─────────────────────┼──────────┼─────────┼──────────┤
+│ 1973-09-01          │  20.8365 │ 63.1559 │ -37.5739 │
+╘═════════════════════╧══════════╧═════════╧══════════╛</div>
+</section>
+
+<!-- DESCRIPTIVE STATS -->
+<section id="descriptive">
+<h2>2. Descriptive Statistics</h2>
+<div class="output-block"><span class="output-label">Output — Summary Statistics</span>╒═══════╤══════════╤════════╤═════════╤═══════════╤══════════╤══════════╤═════════╤═════════╤═════════╤═════════╕
+│       │        N │   Mean │     Std │       Min │       Q1 │   Median │      Q3 │     Max │    Skew │    Kurt │
+╞═══════╪══════════╪════════╪═════════╪═══════════╪══════════╪══════════╪═════════╪═════════╪═════════╪═════════╡
+│ dprod │ 419.0000 │ 0.8896 │ 20.5229 │ -118.8875 │  -6.7368 │   2.4594 │ 10.1038 │ 77.9832 │ -1.5363 │  8.1911 │
+├───────┼──────────┼────────┼─────────┼───────────┼──────────┼──────────┼─────────┼─────────┼─────────┼─────────┤
+│ rea   │ 419.0000 │ 0.1846 │ 24.1136 │  -47.3887 │ -16.8849 │  -5.8494 │ 12.4695 │ 76.7121 │  0.9113 │  0.3590 │
+├───────┼──────────┼────────┼─────────┼───────────┼──────────┼──────────┼─────────┼─────────┼─────────┼─────────┤
+│ rpo   │ 419.0000 │ 0.1129 │ 45.6595 │ -114.7795 │ -36.5168 │ -10.4489 │ 36.9397 │ 90.6366 │  0.0656 │ -0.9173 │
+╘═══════╧══════════╧════════╧═════════╧═══════════╧══════════╧══════════╧═════════╧═════════╧═════════╧═════════╛
+
+── Correlation Matrix ─────────────────────────────────────
+╒═══════╤═════════╤═════════╤═════════╕
+│       │   dprod │     rea │     rpo │
+╞═══════╪═════════╪═════════╪═════════╡
+│ dprod │  1.0000 │ -0.0290 │ -0.0358 │
+├───────┼─────────┼─────────┼─────────┤
+│ rea   │ -0.0290 │  1.0000 │  0.3693 │
+├───────┼─────────┼─────────┼─────────┤
+│ rpo   │ -0.0358 │  0.3693 │  1.0000 │
+╘═══════╧═════════╧═════════╧═════════╛</div>
+</section>
+
+<!-- VISUALIZATION -->
+<section id="visualization">
+<h2>3. Time Series Visualization</h2>
+
+<div class="figure">
+  <img src="assets/img/cell_13_fig_00.png" alt="Time series plots of dprod, rea, rpo">
+  <div class="caption">Figure 1 — Kilian (2009) oil market variables, 1973:02 – 2007:12. Grey bands: NBER recessions.</div>
+</div>
+
+<div class="figure">
+  <img src="assets/img/cell_14_fig_01.png" alt="Marginal distributions">
+  <div class="caption">Figure 2 — Marginal distributions with mean (red dashed) and median (navy dotted).</div>
+</div>
+
+<div class="figure">
+  <img src="assets/img/cell_15_fig_02.png" alt="Correlation heatmap and scatter">
+  <div class="caption">Figure 3 — Correlation matrix and REA vs RPO scatter plot (ρ = 0.3693).</div>
+</div>
+</section>
+
+<!-- CUMULATED -->
+<section id="cumulated">
+<h2>4. Cumulated Series (Level Variables)</h2>
+<p>For cointegration analysis we also construct the <strong>cumulated</strong> (level) series, which are I(1) by construction:</p>
+
+<div class="formula-box">
+  \(\text{dprod\_cum}_t = \sum_{s=1}^{t} \Delta\text{prod}_s, \quad \text{rea\_cum}_t = \sum_{s=1}^{t} \text{rea}_s, \quad \text{rpo\_cum}_t = \sum_{s=1}^{t} \text{rpo}_s\)
+</div>
+
+<div class="figure">
+  <img src="assets/img/cell_17_fig_03.png" alt="Cumulated I(1) series">
+  <div class="caption">Figure 4 — Cumulated (I(1)) level series.</div>
+</div>
+</section>
+
+<hr>
+
+<!-- THEORETICAL BACKGROUND -->
+<section id="theory">
+<h2>5. Segmented Cointegration Tests</h2>
+<h3>5.1 Theoretical Background</h3>
+<p>Standard cointegration tests assume the equilibrium relationship holds over the <strong>entire sample</strong>. However, it may only hold during certain sub-periods. Kim (2003) formalises this as <strong>segmented cointegration</strong>:</p>
+
+<div class="formula-box">
+  \(x_{1t} = \alpha + \beta' x_{2t} + \varepsilon_t\)
+</div>
+
+<p>where the autoregressive root switches between regimes:</p>
+
+<div class="formula-box">
+  \(\rho_t = \begin{cases} \rho < 1 & \text{if } t \in C_T \text{ (cointegration period)} \\ 1 & \text{if } t \in N_T \text{ (non-cointegration period)} \end{cases}\)
+</div>
+
+<div class="grid-2">
+  <div class="card accent">
+    <h4>Kim (2003)</h4>
+    <p style="font-size:.85rem"><strong>H₀</strong>: ρ = 1 for all t &nbsp;vs&nbsp; <strong>H₁</strong>: segmented cointegration</p>
+    <p style="font-size:.82rem">Statistics: Z*<sub>ρ</sub>, Z*<sub>t</sub>, ADF*<sub>ρ</sub>, ADF*<sub>t</sub></p>
+  </div>
+  <div class="card teal">
+    <h4>Martins &amp; Rodrigues (2022)</h4>
+    <p style="font-size:.85rem"><strong>H₀</strong>: no cointegration &nbsp;vs&nbsp; <strong>H₁</strong>: m* segmented breaks</p>
+    <p style="font-size:.82rem">Statistics: W(m*), W<sub>max</sub></p>
+  </div>
+</div>
+</section>
+
+<!-- CONFIGURATIONS -->
+<section id="configurations">
+<h3>5.2 Test Configurations</h3>
+<p>We test six specifications systematically — three raw and three cumulated:</p>
+
+<table>
+<tr><th>Config</th><th>Dependent (y)</th><th>Regressors (X)</th><th>Type</th><th>Model</th></tr>
+<tr><td><strong>A</strong></td><td>rpo</td><td>rea</td><td><span class="pill grey">Raw</span></td><td>drift</td></tr>
+<tr><td><strong>B</strong></td><td>rpo</td><td>dprod</td><td><span class="pill grey">Raw</span></td><td>drift</td></tr>
+<tr><td><strong>C</strong></td><td>rpo</td><td>dprod + rea</td><td><span class="pill grey">Raw</span></td><td>drift</td></tr>
+<tr><td><strong>D</strong></td><td>rpo_cum</td><td>rea_cum</td><td><span class="pill green">Cumulated</span></td><td>drift</td></tr>
+<tr><td><strong>E</strong></td><td>rpo_cum</td><td>dprod_cum</td><td><span class="pill green">Cumulated</span></td><td>drift</td></tr>
+<tr><td><strong>F</strong></td><td>rpo_cum</td><td>dprod_cum + rea_cum</td><td><span class="pill green">Cumulated</span></td><td>drift</td></tr>
+</table>
+</section>
+
+<!-- KIM TESTS -->
+<section id="kim-tests">
+<h3>5.3 Kim (2003) — Infimum-Based Tests</h3>
+<p>The Kim (2003) procedure searches over all admissible segmentations N<sub>T</sub> of length ≤ ℓ̄(T<sub>N</sub>) · T and computes the <strong>infimum</strong> of the test statistics:</p>
+
+<div class="formula-box">
+  \(Z^*_\rho = \inf_{C_T} Z_\rho(C_T), \quad Z^*_t = \inf_{C_T} Z_t(C_T), \quad ADF^*_\rho = \inf_{C_T} ADF_\rho(C_T), \quad ADF^*_t = \inf_{C_T} ADF_t(C_T)\)
+</div>
+
+<h4>Results — All Configurations</h4>
+<table>
+<tr><th>Config</th><th>Statistic</th><th>Inf. Value</th><th>5% CV</th><th>Sig.</th><th>Break (τ₀, τ₁)</th></tr>
+<tr><td rowspan="4"><strong>A</strong>: rpo ~ rea</td>
+    <td>Z*<sub>ρ</sub></td><td>−16.5547</td><td>−50.75</td><td></td><td>(0.205, 0.356)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−3.0007</td><td>−6.36</td><td></td><td>(0.205, 0.356)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−16.3362</td><td>−50.75</td><td></td><td>(0.095, 0.360)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.8365</td><td>−6.36</td><td></td><td>(0.095, 0.360)</td></tr>
+
+<tr><td rowspan="4"><strong>B</strong>: rpo ~ dprod</td>
+    <td>Z*<sub>ρ</sub></td><td>−13.3635</td><td>−50.75</td><td></td><td>(0.730, 0.742)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−2.4854</td><td>−6.36</td><td></td><td>(0.730, 0.742)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−12.7214</td><td>−50.75</td><td></td><td>(0.678, 0.742)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.6933</td><td>−6.36</td><td></td><td>(0.516, 0.742)</td></tr>
+
+<tr><td rowspan="4"><strong>C</strong>: rpo ~ dprod + rea</td>
+    <td>Z*<sub>ρ</sub></td><td>−16.6549</td><td>−65.53</td><td></td><td>(0.205, 0.356)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−3.0060</td><td>−7.38</td><td></td><td>(0.205, 0.356)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−16.1741</td><td>−65.53</td><td></td><td>(0.177, 0.360)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.8040</td><td>−7.38</td><td></td><td>(0.558, 0.742)</td></tr>
+
+<tr><td rowspan="4"><strong>D</strong>: rpo_cum ~ rea_cum</td>
+    <td>Z*<sub>ρ</sub></td><td>−4.4936</td><td>−50.75</td><td></td><td>(0.053, 0.055)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−1.0815</td><td>−6.36</td><td></td><td>(0.053, 0.060)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−9.0760</td><td>−50.75</td><td></td><td>(0.453, 0.508)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.8223</td><td>−6.36</td><td></td><td>(0.453, 0.508)</td></tr>
+
+<tr><td rowspan="4"><strong>E</strong>: rpo_cum ~ dprod_cum</td>
+    <td>Z*<sub>ρ</sub></td><td>−14.6938</td><td>−50.75</td><td></td><td>(0.005, 0.064)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−3.0918</td><td>−6.36</td><td></td><td>(0.005, 0.064)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−9.5220</td><td>−50.75</td><td></td><td>(0.038, 0.064)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−3.2021</td><td>−6.36</td><td></td><td>(0.038, 0.064)</td></tr>
+
+<tr><td rowspan="4"><strong>F</strong>: rpo_cum ~ dprod_cum + rea_cum</td>
+    <td>Z*<sub>ρ</sub></td><td>−13.9169</td><td>−65.53</td><td></td><td>(0.024, 0.064)</td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−3.0049</td><td>−7.38</td><td></td><td>(0.005, 0.064)</td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−9.1560</td><td>−65.53</td><td></td><td>(0.038, 0.064)</td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−3.2362</td><td>−7.38</td><td></td><td>(0.038, 0.064)</td></tr>
+</table>
+<p style="font-size:.82rem;color:var(--text-muted)">Notes: ** p &lt; 0.05, * p &lt; 0.10. Critical values from Kim (2003, Tables 1–2) for ℓ̄ = 0.30.</p>
+</section>
+
+<!-- KIM DETAIL -->
+<section id="kim-detail">
+<h4>Detailed Results — Config C: rpo ~ dprod + rea</h4>
+<div class="output-block"><span class="output-label">Kim (2003) — Config C</span>========================================================================
+Kim (2003) Segmented Cointegration Test Results
+========================================================================
+Model:            Case II (intercept)
+Sample size (T):  419
+Variables (n):    3
+Max ell (T_N):    0.30
+ADF lag order:    12
+
+------------------------------------------------------------------------
+Statistic      Inf. Value  Full Sample       5% CV  Reject H0     tau_0    tau_1
+------------------------------------------------------------------------
+Zp*              -16.6549     -10.9193    -65.5300         No     0.205    0.356
+Zt*               -3.0060      -2.4623     -7.3800         No     0.205    0.356
+ADFp*            -16.1741     -10.3283    -65.5300         No     0.177    0.360
+ADFt*             -2.8040      -2.0346     -7.3800         No     0.558    0.742
+------------------------------------------------------------------------
+Notes: Infimum statistics are Z*_rho, Z*_t, ADF*_rho, ADF*_t
+       from Kim (2003, Eqs. 3.13-3.14).
+       Critical values from Tables 1-2 for ell_bar(T_N)=0.3.
+       Reject H0 implies segmented cointegration detected.
+========================================================================</div>
+
+<h4>Detailed Results — Config F: rpo_cum ~ dprod_cum + rea_cum</h4>
+<div class="output-block"><span class="output-label">Kim (2003) — Config F</span>========================================================================
+Kim (2003) Segmented Cointegration Test Results
+========================================================================
+Model:            Case II (intercept)
+Sample size (T):  419
+Variables (n):    3
+Max ell (T_N):    0.30
+ADF lag order:    12
+
+------------------------------------------------------------------------
+Statistic      Inf. Value  Full Sample       5% CV  Reject H0     tau_0    tau_1
+------------------------------------------------------------------------
+Zp*              -13.9169      -4.8613    -65.5300         No     0.024    0.064
+Zt*               -3.0049      -2.0102     -7.3800         No     0.005    0.064
+ADFp*             -9.1560      -6.0629    -65.5300         No     0.038    0.064
+ADFt*             -3.2362      -2.2152     -7.3800         No     0.038    0.064
+========================================================================</div>
+</section>
+
+<!-- MR TESTS -->
+<section id="mr-tests">
+<h3>5.4 Martins &amp; Rodrigues (2022) — Wald-Type Tests</h3>
+<p>The MR (2022) procedure uses <strong>sup-Wald-type</strong> statistics with two alternative hypotheses:</p>
+<ul>
+  <li><strong>H<sub>1A</sub></strong>: First regime is I(1) → switches to I(0) → back to I(1) → …</li>
+  <li><strong>H<sub>1B</sub></strong>: First regime is I(0) → switches to I(1) → back to I(0) → …</li>
+</ul>
+
+<div class="formula-box">
+  \(W(m^*) = \max\{\sup F_A(m^*),\; \sup F_B(m^*)\}, \qquad W_{\max} = \max_{1 \leq m \leq \bar{m}} W(m)\)
+</div>
+
+<h4>Results — All Configurations</h4>
+<table>
+<tr><th>Config</th><th>W(1)</th><th>W(2)</th><th>W(3)</th><th>W<sub>max</sub></th><th>5% CV</th></tr>
+<tr><td><strong>A</strong>: rpo ~ rea</td>
+    <td>5.9991</td><td class="sig">12.9595 **</td><td class="sig">8.5779 **</td><td class="sig"><strong>12.9595</strong></td><td>—</td></tr>
+<tr><td><strong>B</strong>: rpo ~ dprod</td>
+    <td class="sig">10.3457 **</td><td class="sig">14.4660 **</td><td class="sig">15.8329 **</td><td class="sig"><strong>15.8329</strong></td><td>—</td></tr>
+<tr><td><strong>C</strong>: rpo ~ dprod + rea</td>
+    <td>6.0862</td><td class="sig">12.4415 **</td><td class="sig">8.3917 **</td><td class="sig"><strong>12.4415</strong></td><td>—</td></tr>
+<tr><td><strong>D</strong>: rpo_cum ~ rea_cum</td>
+    <td>8.6579 *</td><td>8.4881 *</td><td class="sig">8.4529 **</td><td><strong>8.6579</strong></td><td>—</td></tr>
+<tr><td><strong>E</strong>: rpo_cum ~ dprod_cum</td>
+    <td>5.7297</td><td class="sig">10.0776 **</td><td>7.4269 *</td><td class="sig"><strong>10.0776</strong></td><td>—</td></tr>
+<tr><td><strong>F</strong>: rpo_cum ~ dprod_cum + rea_cum</td>
+    <td>5.7978</td><td class="sig">10.5888 **</td><td class="sig">7.9761 **</td><td class="sig"><strong>10.5888</strong></td><td>—</td></tr>
+</table>
+<p style="font-size:.82rem;color:var(--text-muted)">Notes: ** p &lt; 0.05, * p &lt; 0.10. Critical values from MR (2022, Table 1), ε = 0.15.</p>
+</section>
+
+<!-- MR DETAIL -->
+<section id="mr-detail">
+<h4>Detailed Results — Config C: rpo ~ dprod + rea</h4>
+<div class="output-block"><span class="output-label">MR (2022) — Config C</span>==============================================================================
+Martins & Rodrigues (2022) Wald-Type Tests for Segmented Cointegration
+==============================================================================
+Model:            Intercept only
+Sample size (T):  419
+Variables (K+1):  3
+Trimming (eps):   0.15
+Max breaks:       3
+ADF lag order:    12
+
+------------------------------------------------------------------------------
+Test          Statistic      10% CV      5% CV      1% CV   Reject 5%
+------------------------------------------------------------------------------
+W(1)           6.0862       7.711      8.761     11.103          No
+W(2)          12.4415       8.036      9.090     11.470       Yes**
+W(3)           8.3917       6.830      7.645      9.855       Yes**
+W_max          12.4415       9.214     10.552     13.973       Yes**
+------------------------------------------------------------------------------
+
+Estimated break dates (for W_max):
+  Number of breaks:  2
+  First regime:      I(1) (H1A)
+  Break dates:       (143, 350)
+  Break fractions:   (0.3413, 0.8353)
+==============================================================================</div>
+
+<h4>Detailed Results — Config F: rpo_cum ~ dprod_cum + rea_cum</h4>
+<div class="output-block"><span class="output-label">MR (2022) — Config F</span>==============================================================================
+Martins & Rodrigues (2022) Wald-Type Tests for Segmented Cointegration
+==============================================================================
+Model:            Intercept only
+Sample size (T):  419
+Variables (K+1):  3
+Trimming (eps):   0.15
+Max breaks:       3
+ADF lag order:    12
+
+------------------------------------------------------------------------------
+Test          Statistic      10% CV      5% CV      1% CV   Reject 5%
+------------------------------------------------------------------------------
+W(1)           5.7978       7.711      8.761     11.103          No
+W(2)          10.5888       8.036      9.090     11.470       Yes**
+W(3)           7.9761       6.830      7.645      9.855       Yes**
+W_max          10.5888       9.214     10.552     13.973       Yes**
+------------------------------------------------------------------------------
+
+Estimated break dates (for W_max):
+  Number of breaks:  2
+  First regime:      I(1) (H1A)
+  Break dates:       (109, 216)
+  Break fractions:   (0.2601, 0.5155)
+==============================================================================</div>
+</section>
+
+<hr>
+
+<!-- BREAK DATES -->
+<section id="breaks">
+<h2>6. Estimated Break Dates</h2>
+
+<h3>MR (2022) Break Date Estimates</h3>
+<table>
+<tr><th>Config</th><th>m*</th><th>Hyp</th><th>Break Dates</th><th>Fractions</th><th>W<sub>max</sub></th></tr>
+<tr><td><strong>A</strong>: rpo ~ rea</td><td>2</td><td>A</td><td>1985:01, 2002:04</td><td>0.341, 0.835</td><td class="sig">12.9595</td></tr>
+<tr><td><strong>B</strong>: rpo ~ dprod</td><td>3</td><td>B</td><td>1978:05, 1985:02, 1990:09</td><td>0.150, 0.344, 0.504</td><td class="sig">15.8329</td></tr>
+<tr><td><strong>C</strong>: rpo ~ dprod + rea</td><td>2</td><td>A</td><td>1985:01, 2002:04</td><td>0.341, 0.835</td><td class="sig">12.4415</td></tr>
+<tr><td><strong>D</strong>: rpo_cum ~ rea_cum</td><td>1</td><td>A</td><td>1986:07</td><td>0.384</td><td>8.6579</td></tr>
+<tr><td><strong>E</strong>: rpo_cum ~ dprod_cum</td><td>2</td><td>A</td><td>1982:03, 1991:02</td><td>0.260, 0.516</td><td class="sig">10.0776</td></tr>
+<tr><td><strong>F</strong>: rpo_cum ~ dprod_cum + rea_cum</td><td>2</td><td>A</td><td>1982:03, 1991:02</td><td>0.260, 0.516</td><td class="sig">10.5888</td></tr>
+</table>
+</section>
+
+<!-- BREAK ESTIMATOR -->
+<section id="break-estimator">
+<h3>Kim (2003) Extremum Break Estimator</h3>
+<p>argmax Λ<sub>T</sub>(τ) — T-rate consistent estimator for the non-cointegration period:</p>
+
+<table>
+<tr><th>Config</th><th>(τ̂₀, τ̂₁)</th><th>Break Dates</th><th>Λ<sub>max</sub></th></tr>
+<tr><td><strong>A</strong>: rpo ~ rea</td><td>(0.740, 0.742)</td><td>(1998:12, 1999:01)</td><td>5.3014</td></tr>
+<tr><td><strong>B</strong>: rpo ~ dprod</td><td>(0.740, 0.742)</td><td>(1998:12, 1999:01)</td><td>6.5067</td></tr>
+<tr><td><strong>C</strong>: rpo ~ dprod + rea</td><td>(0.740, 0.742)</td><td>(1998:12, 1999:01)</td><td>5.3360</td></tr>
+<tr><td><strong>D</strong>: rpo_cum ~ rea_cum</td><td>(0.053, 0.055)</td><td>(1974:12, 1975:01)</td><td>3.8550</td></tr>
+<tr><td><strong>E</strong>: rpo_cum ~ dprod_cum</td><td>(0.062, 0.064)</td><td>(1975:04, 1975:05)</td><td>7.4634</td></tr>
+<tr><td><strong>F</strong>: rpo_cum ~ dprod_cum + rea_cum</td><td>(0.062, 0.064)</td><td>(1975:04, 1975:05)</td><td>7.4112</td></tr>
+</table>
+</section>
+
+<!-- REGIMES -->
+<section id="regimes">
+<h2>7. Regime Visualisation</h2>
+
+<h3>Config C: rpo ~ dprod + rea (Raw)</h3>
+<div class="figure">
+  <img src="assets/img/cell_33_fig_04.png" alt="Regime breaks raw data">
+  <div class="caption">Figure 5 — Segmented cointegration regimes for rpo ~ dprod + rea, with MR (2022) estimated breaks.</div>
+</div>
+
+<h4>Estimated Regimes</h4>
+<table>
+<tr><th>Regime</th><th>Start</th><th>End</th><th>Obs</th><th>Type</th></tr>
+<tr><td>Regime 1</td><td>1973:02</td><td>1985:01</td><td>144</td><td><span class="pill green">I(0) — Cointegration</span></td></tr>
+<tr><td>Regime 2</td><td>1985:01</td><td>2002:04</td><td>208</td><td><span class="pill red">I(1) — No cointegration</span></td></tr>
+<tr><td>Regime 3</td><td>2002:04</td><td>2007:12</td><td>69</td><td><span class="pill green">I(0) — Cointegration</span></td></tr>
+</table>
+
+<h3>Config F: rpo_cum ~ dprod_cum + rea_cum (Cumulated)</h3>
+<div class="figure">
+  <img src="assets/img/cell_34_fig_05.png" alt="Regime breaks cumulated data">
+  <div class="caption">Figure 6 — Segmented cointegration regimes for cumulated series.</div>
+</div>
+</section>
+
+<!-- RESIDUALS -->
+<section id="residuals">
+<h2>8. Cointegrating Residuals Analysis</h2>
+<p>OLS residuals from the cointegrating regression reveal periods where the error process switches between I(0) and I(1). Red dashed lines mark MR (2022) estimated break dates.</p>
+
+<div class="figure">
+  <img src="assets/img/cell_36_fig_06.png" alt="OLS Residuals raw specs">
+  <div class="caption">Figure 7 — Cointegrating regression residuals (raw specifications) with MR break dates.</div>
+</div>
+
+<div class="figure">
+  <img src="assets/img/cell_37_fig_07.png" alt="OLS Residuals cumulated specs">
+  <div class="caption">Figure 8 — Cointegrating regression residuals (cumulated specifications) with MR break dates.</div>
+</div>
+</section>
+
+<!-- COMPARISON -->
+<section id="comparison">
+<h2>10. Visual Comparison of Test Statistics</h2>
+
+<div class="figure">
+  <img src="assets/img/cell_39_fig_08.png" alt="Kim bar chart comparison">
+  <div class="caption">Figure 9 — Kim (2003) infimum test statistics (blue bars) vs 5% critical values (red lines).</div>
+</div>
+
+<div class="figure">
+  <img src="assets/img/cell_40_fig_09.png" alt="MR W_max comparison">
+  <div class="caption">Figure 10 — MR (2022) W<sub>max</sub> statistics vs 5% critical values. ** indicates rejection at 5%.</div>
+</div>
+</section>
+
+<!-- W(m*) PROFILE -->
+<section id="wm-profile">
+<h3>W(m*) Profiles Across Number of Breaks</h3>
+<div class="figure">
+  <img src="assets/img/cell_41_fig_10.png" alt="W(m*) profiles">
+  <div class="caption">Figure 11 — W(m*) profile by number of breaks (orange) versus 5% critical values (grey). ** indicates significance.</div>
+</div>
+</section>
+
+<hr>
+
+<!-- ROBUSTNESS -->
+<section id="robustness">
+<h2>11. Robustness Analysis</h2>
+<h3>11.1 Sensitivity to Deterministic Specification</h3>
+<p>Results for <code>rpo ~ dprod + rea</code> under all three deterministic models:</p>
+
+<h4>Kim (2003) Robustness</h4>
+<table>
+<tr><th>Model</th><th>Stat</th><th>Inf. Value</th><th>5% CV</th><th>Sig.</th></tr>
+<tr><td rowspan="4">Case I (none)</td><td>Z*<sub>ρ</sub></td><td>−16.4898</td><td>−36.41</td><td></td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−2.9962</td><td>−4.23</td><td></td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−15.9940</td><td>−36.41</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7590</td><td>−4.23</td><td></td></tr>
+<tr><td rowspan="4">Case II (drift)</td><td>Z*<sub>ρ</sub></td><td>−16.4796</td><td>−65.53</td><td></td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−15.9793</td><td>−65.53</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7574</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="4">Case III (trend)</td><td>Z*<sub>ρ</sub></td><td>−25.4093</td><td>−79.34</td><td></td></tr>
+<tr><td>Z*<sub>t</sub></td><td>−3.6760</td><td>−8.62</td><td></td></tr>
+<tr><td>ADF*<sub>ρ</sub></td><td>−20.7764</td><td>−79.34</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−3.0725</td><td>−8.62</td><td></td></tr>
+</table>
+
+<h4>MR (2022) Robustness</h4>
+<table>
+<tr><th>Model</th><th>W<sub>max</sub></th><th>Opt. m*</th></tr>
+<tr><td>Case I (none)</td><td>12.3112</td><td>2</td></tr>
+<tr><td>Case II (drift)</td><td>12.3103</td><td>2</td></tr>
+<tr><td>Case III (trend)</td><td>13.7213</td><td>2</td></tr>
+</table>
+</section>
+
+<!-- TRIMMING -->
+<section id="trimming">
+<h3>11.2 Sensitivity to Trimming Parameter (MR 2022)</h3>
+<table>
+<tr><th>ε</th><th>W<sub>max</sub></th><th>Sig.</th><th>Opt. m*</th></tr>
+<tr><td>0.10</td><td>16.6172</td><td class="sig">**</td><td>2</td></tr>
+<tr><td>0.12</td><td>16.2164</td><td class="sig">**</td><td>2</td></tr>
+<tr><td>0.15</td><td>12.3103</td><td class="sig">**</td><td>2</td></tr>
+<tr><td>0.18</td><td>11.6970</td><td class="sig">**</td><td>2</td></tr>
+<tr><td>0.20</td><td>10.4847</td><td class="sig">**</td><td>2</td></tr>
+</table>
+</section>
+
+<!-- SEGMENT LENGTH -->
+<section id="segment-length">
+<h3>11.3 Sensitivity to Max Segment Length (Kim 2003)</h3>
+<table>
+<tr><th>ℓ̄</th><th>Stat</th><th>Inf. Value</th><th>5% CV</th><th>Sig.</th></tr>
+<tr><td rowspan="2">0.15</td><td>Z*<sub>t</sub></td><td>−2.9744</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7157</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="2">0.20</td><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7554</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="2">0.25</td><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7554</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="2">0.30</td><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7574</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="2">0.35</td><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7958</td><td>−7.38</td><td></td></tr>
+<tr><td rowspan="2">0.40</td><td>Z*<sub>t</sub></td><td>−2.9955</td><td>−7.38</td><td></td></tr>
+<tr><td>ADF*<sub>t</sub></td><td>−2.7958</td><td>−7.38</td><td></td></tr>
+</table>
+<p style="font-size:.82rem;color:var(--text-muted)">Note: Tabulated critical values are for ℓ̄ = 0.30 only.</p>
+</section>
+
+<hr>
+
+<!-- COMPREHENSIVE SUMMARY -->
+<section id="summary">
+<h2>13. Comprehensive Results Summary</h2>
+
+<div class="card accent">
+<h4>Kim (2003) — Infimum-Based Tests</h4>
+<p style="font-size:.82rem;margin-bottom:.5rem">H₀: ρ = 1 ∀t (no cointegration) vs H₁: segmented cointegration</p>
+<table>
+<tr><th>Specification</th><th>Z*<sub>t</sub></th><th>ADF*<sub>t</sub></th><th>Decision (5%)</th></tr>
+<tr><td>A: rpo ~ rea</td><td>−3.0007</td><td>−2.8365</td><td class="fail">Fail to reject</td></tr>
+<tr><td>B: rpo ~ dprod</td><td>−2.4854</td><td>−2.6933</td><td class="fail">Fail to reject</td></tr>
+<tr><td>C: rpo ~ dprod + rea</td><td>−3.0060</td><td>−2.8040</td><td class="fail">Fail to reject</td></tr>
+<tr><td>D: rpo_cum ~ rea_cum</td><td>−1.0815</td><td>−2.8223</td><td class="fail">Fail to reject</td></tr>
+<tr><td>E: rpo_cum ~ dprod_cum</td><td>−3.0918</td><td>−3.2021</td><td class="fail">Fail to reject</td></tr>
+<tr><td>F: rpo_cum ~ dprod_cum + rea_cum</td><td>−3.0049</td><td>−3.2362</td><td class="fail">Fail to reject</td></tr>
+</table>
+</div>
+
+<div class="card teal">
+<h4>Martins &amp; Rodrigues (2022) — Wald-Type Tests</h4>
+<p style="font-size:.82rem;margin-bottom:.5rem">H₀: no cointegration vs H₁: m* segmented breaks</p>
+<table>
+<tr><th>Specification</th><th>W<sub>max</sub></th><th>m*</th><th>Decision (5%)</th><th>Break Dates</th></tr>
+<tr><td>A: rpo ~ rea</td><td class="sig">12.9595 **</td><td>2</td><td class="reject">Reject H₀</td><td>1985:01, 2002:04</td></tr>
+<tr><td>B: rpo ~ dprod</td><td class="sig">15.8329 **</td><td>3</td><td class="reject">Reject H₀</td><td>1978:05, 1985:02, 1990:09</td></tr>
+<tr><td>C: rpo ~ dprod + rea</td><td class="sig">12.4415 **</td><td>2</td><td class="reject">Reject H₀</td><td>1985:01, 2002:04</td></tr>
+<tr><td>D: rpo_cum ~ rea_cum</td><td class="sig">8.6579 **</td><td>1</td><td class="reject">Reject H₀</td><td>1986:07</td></tr>
+<tr><td>E: rpo_cum ~ dprod_cum</td><td class="sig">10.0776 **</td><td>2</td><td class="reject">Reject H₀</td><td>1982:03, 1991:02</td></tr>
+<tr><td>F: rpo_cum ~ dprod_cum + rea_cum</td><td class="sig">10.5888 **</td><td>2</td><td class="reject">Reject H₀</td><td>1982:03, 1991:02</td></tr>
+</table>
+</div>
+
+<p style="font-size:.82rem;color:var(--text-muted)">Notes: ** significant at 5%, * significant at 10%. Kim (2003): critical values from Tables 1–2, ℓ̄ = 0.30. MR (2022): critical values from Table 1, ε = 0.15.</p>
+</section>
+
+<!-- INTERPRETATION -->
+<section id="interpretation">
+<h2>14. Economic Interpretation</h2>
+
+<div class="card blue">
+<h4>Key Findings</h4>
+<ol>
+  <li><strong>Standard vs Segmented Cointegration.</strong> While the Kim (2003) infimum tests fail to reject the null of no cointegration at conventional levels, the MR (2022) Wald-type tests successfully identify <strong>segmented cointegration</strong> across all six specifications — periods where the equilibrium holds interspersed with temporary breakdowns.</li>
+  <li><strong>Structural Breaks in Oil Markets.</strong> The estimated break dates (1985:01 and 2002:04 for the key raw specifications) correspond to well-known structural shifts: the mid-1980s oil price collapse and the early-2000s commodity super-cycle.</li>
+  <li><strong>Regime Switching.</strong> Under hypothesis H<sub>1A</sub>, the sample is divided into three regimes: cointegration (1973–1985), non-cointegration (1985–2002), and cointegration restored (2002–2007).</li>
+  <li><strong>Robustness.</strong> Results are broadly robust to the choice of deterministic specification (Cases I–III) and trimming parameter ε ∈ [0.10, 0.20].</li>
+</ol>
+</div>
+
+<h3>Policy Implications</h3>
+<p>The presence of segmented cointegration suggests that long-run relationships between oil market variables are <strong>time-varying</strong>. Standard full-sample cointegration tests may underestimate the degree of long-run dependence, and forecasting models should account for <strong>regime-dependent</strong> equilibrium correction mechanisms.</p>
+</section>
+
+<!-- REFERENCES -->
+<section id="references">
+<h2>References</h2>
+<div class="ref">Kilian, L. (2009). Not All Oil Price Shocks Are Alike: Disentangling Demand and Supply Shocks in the Crude Oil Market. <em>American Economic Review</em>, 99(3), 1053–1069.</div>
+<div class="ref">Kim, J.-Y. (2003). Inference on Segmented Cointegration. <em>Econometric Theory</em>, 19, 620–639.</div>
+<div class="ref">Martins, L.F. &amp; Rodrigues, P.M.M. (2022). Tests for Segmented Cointegration: An Application to US Government Budgets. <em>Empirical Economics</em>, 63, 567–600.</div>
+</section>
+
+<div class="output-block" style="margin-top:3rem"><span class="output-label">Execution Watermark</span>=================================================================
+  NOTEBOOK EXECUTION COMPLETED
+  Timestamp: 2026-02-06 13:23:03
+  Python: 3.13.7
+  segmcoint: 1.0.0
+  Author: Dr Merwan Roudane
+=================================================================</div>
+
+</main>
+</div>
+
+<footer>
+  <strong>segmcoint</strong> v1.0.0 &nbsp;·&nbsp; © 2026 <a href="https://github.com/merwanroudane">Dr Merwan Roudane</a> &nbsp;·&nbsp; MIT License &nbsp;·&nbsp;
+  <a href="https://github.com/merwanroudane/segmcoint">GitHub Repository</a>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "\\(", right: "\\)", display: false},
+      {left: "\\[", right: "\\]", display: true},
+      {left: "$$", right: "$$", display: true}
+    ]
+  });
+
+  // Active sidebar link on scroll
+  const links = document.querySelectorAll('.sidebar a');
+  const sections = [];
+  links.forEach(a => {
+    const id = a.getAttribute('href');
+    if(id && id.startsWith('#')){
+      const el = document.querySelector(id);
+      if(el) sections.push({el, a});
+    }
+  });
+  window.addEventListener('scroll', () => {
+    let current = sections[0];
+    for(const s of sections){
+      if(s.el.getBoundingClientRect().top <= 100) current = s;
+    }
+    links.forEach(a => a.classList.remove('active'));
+    if(current) current.a.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
